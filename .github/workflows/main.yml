@@ -28,12 +28,12 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: 7.5
+          gradle-version: 7.6.1 # Diubah dari 7.5 jadi 7.6.1
 
       - name: Build APK
         run: |
           cd esp-final
-          gradle assembleDebug
+          ./gradlew assembleDebug --stacktrace # Diubah dari gradle jadi ./gradlew + tambah --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
