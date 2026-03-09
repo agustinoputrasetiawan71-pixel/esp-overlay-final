@@ -1,35 +1,70 @@
-name: Build APK
+# Hapus folder lama jika ada
+cd ~
+rm -rf esp-final
 
-on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+# Buat folder dan file dari awal
+mkdir -p esp-final/app/src/main/{java/com/example/espoverlay,res/layout,res/values}
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+# build.gradle top-level
+cat > esp-final/build.gradle << 'EOF'
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.0'
+    }
+}
+EOF
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
+# settings.gradle
+cat > esp-final/settings.gradle << 'EOF'
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+include ':app'
+rootProject.name = "ESPOverlay"
+EOF
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          accept-android-sdk-licenses: true
-          skip-jdk-version-check: true # Skip cek versi JDK
+# app/build.gradle
+cat > esp-final/app/build.gradle << 'EOF'
+plugins {
+    id 'com.android.application'
+}
 
-      - name: Build APK
-        run: |
-          cd esp-final
-          gradle assembleDebug --stacktrace
-        env:
-          ANDROID_HOME: /usr/local/lib/android/sdk
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: esp-final/app/build/outputs/apk/debug/app-debug.apk
+android {
+    namespace 'com.example.espoverlay'
+    compileSdk 30
+    buildToolsVersion "30.0.3"
+
+    defaultConfig {
+        applicationId "com.example.espoverlay"
+        minSdk 21
+        targetSdk 30
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
+EOF
